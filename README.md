@@ -2,7 +2,7 @@
 
 OrcaChessEngine is an advanced AI-powered chess engine that combines cutting-edge machine learning techniques with traditional chess algorithms to provide a powerful and intelligent chess-playing experience.
 
-![Orca Chess Engine Logo](https://via.placeholder.com/150)
+![Orca Chess Engine Logo]([https://via.placeholder.com/150](https://i.natgeofe.com/n/87a36612-27e8-4e6b-b188-82c37a8dd95a/NationalGeographic_2772395.jpg))
 
 ## Features
 
