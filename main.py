@@ -1,21 +1,16 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.optimizers import Adam
 
 
 # Simulated data generation
 def generate_protein_data(num_samples=1000):
-    # Simulating features that might affect protein folding
-    # These could represent things like amino acid composition, hydrophobicity, etc.
     X = np.random.rand(num_samples, 10)
-
-    # Simulating a simplistic "folding score"
-    # In reality, this would be a much more complex calculation
     y = np.sum(X[:, :5], axis=1) - np.sum(X[:, 5:], axis=1) + np.random.normal(0, 0.1, num_samples)
-
     return X, y
 
 
@@ -34,7 +29,8 @@ X_test_scaled = scaler.transform(X_test)
 # Define the neural network model
 def create_model():
     model = Sequential([
-        Dense(64, activation='relu', input_shape=(10,)),
+        Input(shape=(10,)),
+        Dense(64, activation='relu'),
         Dropout(0.2),
         Dense(32, activation='relu'),
         Dropout(0.2),
@@ -48,7 +44,7 @@ def create_model():
 
 # Create and train the model
 model = create_model()
-history = model.fit(X_train_scaled, y_train, validation_split=0.2, epochs=100, batch_size=32, verbose=0)
+history = model.fit(X_train_scaled, y_train, validation_split=0.2, epochs=100, batch_size=32, verbose=1)
 
 # Evaluate the model
 train_loss, train_mae = model.evaluate(X_train_scaled, y_train, verbose=0)
@@ -66,20 +62,14 @@ print(f"Predicted folding score for sample protein: {prediction[0][0]:.4f}")
 
 # Simulating a more realistic protein folding scenario
 def protein_folding_simulation(sequence, model, scaler):
-    # Convert amino acid sequence to numerical features
-    # This is a simplified version - in reality, this would be much more complex
     features = np.array([ord(aa) for aa in sequence]).reshape(1, -1)
 
-    # Ensure the feature vector is the correct length (pad or truncate)
     if features.shape[1] < 10:
         features = np.pad(features, ((0, 0), (0, 10 - features.shape[1])))
     elif features.shape[1] > 10:
         features = features[:, :10]
 
-    # Scale the features
     features_scaled = scaler.transform(features)
-
-    # Predict folding score
     folding_score = model.predict(features_scaled)[0][0]
 
     return folding_score
