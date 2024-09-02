@@ -1,72 +1,74 @@
+import openmm as mm
+import openmm.app as app
+from openmm import unit
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation
 
+# Create a system with two particles
+system = mm.System()
 
-def generate_random_protein_backbone(n_residues, step_size=3.8):
-    """Generate a random protein backbone structure."""
-    phi = np.random.uniform(-np.pi, np.pi, n_residues)
-    psi = np.random.uniform(-np.pi, np.pi, n_residues)
+# Add two particles to the system
+system.addParticle(mass=1.0 * unit.amu)
+system.addParticle(mass=1.0 * unit.amu)
 
-    x, y, z = [0], [0], [0]
-    for i in range(1, n_residues):
-        dx = step_size * np.cos(phi[i]) * np.sin(psi[i])
-        dy = step_size * np.sin(phi[i]) * np.sin(psi[i])
-        dz = step_size * np.cos(psi[i])
-        x.append(x[-1] + dx)
-        y.append(y[-1] + dy)
-        z.append(z[-1] + dz)
+# Set up nonbonded force (which includes electrostatics)
+nonbonded_force = mm.NonbondedForce()
+system.addForce(nonbonded_force)
 
-    return np.array(x), np.array(y), np.array(z)
+# Add particles to the nonbonded force
+# Parameters: charge, sigma, epsilon
+nonbonded_force.addParticle(1.0, 1.0, 0.0)  # Particle 1: positive charge
+nonbonded_force.addParticle(-1.0, 1.0, 0.0)  # Particle 2: negative charge
 
+# Create a Langevin integrator
+integrator = mm.LangevinIntegrator(300*unit.kelvin, 1/unit.picosecond, 0.002*unit.picoseconds)
 
-# Generate a random protein backbone
-n_residues = 100
-x, y, z = generate_random_protein_backbone(n_residues)
+# Create a simulation context
+platform = mm.Platform.getPlatformByName('Reference')
+context = mm.Context(system, integrator, platform)
 
-# Set up the figure and 3D axis
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111, projection='3d')
+# Set initial positions (in nanometers)
+initial_positions = np.array([
+    [0.0, 0.0, 0.0],
+    [0.5, 0.0, 0.0]
+]) * unit.nanometers
 
-# Initialize an empty line
-line, = ax.plot([], [], [], color='b', alpha=0.7, linewidth=2)
-point, = ax.plot([], [], [], 'ro', markersize=8)
+context.setPositions(initial_positions)
 
-# Set axis limits
-ax.set_xlim(min(x), max(x))
-ax.set_ylim(min(y), max(y))
-ax.set_zlim(min(z), max(z))
+# Run simulation and collect data
+n_steps = 1000
+positions = []
+energies = []
 
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.set_title('Protein Backbone Structure Formation')
+for step in range(n_steps):
+    integrator.step(1)
+    state = context.getState(getPositions=True, getEnergy=True)
+    positions.append(state.getPositions(asNumpy=True).value_in_unit(unit.nanometers))
+    energies.append(state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole))
 
+# Convert positions to numpy array for easier manipulation
+positions = np.array(positions)
 
-def init():
-    line.set_data([], [])
-    line.set_3d_properties([])
-    point.set_data([], [])
-    point.set_3d_properties([])
-    return line, point
+# Plot trajectory
+fig = plt.figure(figsize=(12, 5))
 
+# 3D trajectory plot
+ax1 = fig.add_subplot(121, projection='3d')
+ax1.plot(positions[:, 0, 0], positions[:, 0, 1], positions[:, 0, 2], label='Particle 1')
+ax1.plot(positions[:, 1, 0], positions[:, 1, 1], positions[:, 1, 2], label='Particle 2')
+ax1.set_xlabel('X (nm)')
+ax1.set_ylabel('Y (nm)')
+ax1.set_zlabel('Z (nm)')
+ax1.set_title('Particle Trajectories')
+ax1.legend()
 
-def animate(i):
-    line.set_data(x[:i], y[:i])
-    line.set_3d_properties(z[:i])
-    point.set_data(x[i - 1:i], y[i - 1:i])
-    point.set_3d_properties(z[i - 1:i])
-    ax.view_init(elev=10., azim=i)
-    return line, point
-
-
-# Create the animation
-anim = FuncAnimation(fig, animate, init_func=init, frames=n_residues,
-                     interval=50, blit=False, repeat=True)
+# Energy plot
+ax2 = fig.add_subplot(122)
+ax2.plot(energies)
+ax2.set_xlabel('Simulation Step')
+ax2.set_ylabel('Potential Energy (kJ/mol)')
+ax2.set_title('System Potential Energy')
 
 plt.tight_layout()
 plt.show()
-
-# Uncomment the following line to save the animation as a gif
-# anim.save('protein_folding.gif', writer='pillow', fps=30)
