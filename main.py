@@ -1,81 +1,72 @@
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Input
-from tensorflow.keras.optimizers import Adam
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 
 
-# Simulated data generation
-def generate_protein_data(num_samples=1000):
-    X = np.random.rand(num_samples, 10)
-    y = np.sum(X[:, :5], axis=1) - np.sum(X[:, 5:], axis=1) + np.random.normal(0, 0.1, num_samples)
-    return X, y
+def generate_random_protein_backbone(n_residues, step_size=3.8):
+    """Generate a random protein backbone structure."""
+    phi = np.random.uniform(-np.pi, np.pi, n_residues)
+    psi = np.random.uniform(-np.pi, np.pi, n_residues)
+
+    x, y, z = [0], [0], [0]
+    for i in range(1, n_residues):
+        dx = step_size * np.cos(phi[i]) * np.sin(psi[i])
+        dy = step_size * np.sin(phi[i]) * np.sin(psi[i])
+        dz = step_size * np.cos(psi[i])
+        x.append(x[-1] + dx)
+        y.append(y[-1] + dy)
+        z.append(z[-1] + dz)
+
+    return np.array(x), np.array(y), np.array(z)
 
 
-# Generate our simulated data
-X, y = generate_protein_data(5000)
+# Generate a random protein backbone
+n_residues = 100
+x, y, z = generate_random_protein_backbone(n_residues)
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Set up the figure and 3D axis
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
 
-# Normalize the input features
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+# Initialize an empty line
+line, = ax.plot([], [], [], color='b', alpha=0.7, linewidth=2)
+point, = ax.plot([], [], [], 'ro', markersize=8)
 
+# Set axis limits
+ax.set_xlim(min(x), max(x))
+ax.set_ylim(min(y), max(y))
+ax.set_zlim(min(z), max(z))
 
-# Define the neural network model
-def create_model():
-    model = Sequential([
-        Input(shape=(10,)),
-        Dense(64, activation='relu'),
-        Dropout(0.2),
-        Dense(32, activation='relu'),
-        Dropout(0.2),
-        Dense(16, activation='relu'),
-        Dense(1)
-    ])
-
-    model.compile(optimizer=Adam(learning_rate=0.001), loss='mse', metrics=['mae'])
-    return model
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+ax.set_title('Protein Backbone Structure Formation')
 
 
-# Create and train the model
-model = create_model()
-history = model.fit(X_train_scaled, y_train, validation_split=0.2, epochs=100, batch_size=32, verbose=1)
-
-# Evaluate the model
-train_loss, train_mae = model.evaluate(X_train_scaled, y_train, verbose=0)
-test_loss, test_mae = model.evaluate(X_test_scaled, y_test, verbose=0)
-
-print(f"Training MAE: {train_mae:.4f}")
-print(f"Testing MAE: {test_mae:.4f}")
-
-# Example prediction
-sample_protein = np.random.rand(1, 10)
-sample_protein_scaled = scaler.transform(sample_protein)
-prediction = model.predict(sample_protein_scaled)
-print(f"Predicted folding score for sample protein: {prediction[0][0]:.4f}")
+def init():
+    line.set_data([], [])
+    line.set_3d_properties([])
+    point.set_data([], [])
+    point.set_3d_properties([])
+    return line, point
 
 
-# Simulating a more realistic protein folding scenario
-def protein_folding_simulation(sequence, model, scaler):
-    features = np.array([ord(aa) for aa in sequence]).reshape(1, -1)
-
-    if features.shape[1] < 10:
-        features = np.pad(features, ((0, 0), (0, 10 - features.shape[1])))
-    elif features.shape[1] > 10:
-        features = features[:, :10]
-
-    features_scaled = scaler.transform(features)
-    folding_score = model.predict(features_scaled)[0][0]
-
-    return folding_score
+def animate(i):
+    line.set_data(x[:i], y[:i])
+    line.set_3d_properties(z[:i])
+    point.set_data(x[i - 1:i], y[i - 1:i])
+    point.set_3d_properties(z[i - 1:i])
+    ax.view_init(elev=10., azim=i)
+    return line, point
 
 
-# Example usage
-protein_sequence = "MVGGVPGKNI"
-folding_score = protein_folding_simulation(protein_sequence, model, scaler)
-print(f"Predicted folding score for sequence {protein_sequence}: {folding_score:.4f}")
+# Create the animation
+anim = FuncAnimation(fig, animate, init_func=init, frames=n_residues,
+                     interval=50, blit=False, repeat=True)
+
+plt.tight_layout()
+plt.show()
+
+# Uncomment the following line to save the animation as a gif
+# anim.save('protein_folding.gif', writer='pillow', fps=30)
