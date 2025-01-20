@@ -1,4 +1,4 @@
-# 🐋 OrcaFold
+# OrcaFold
 
 A state-of-the-art protein structure prediction system implementing advanced deep learning architectures inspired by AlphaFold.
 
@@ -6,26 +6,26 @@ A state-of-the-art protein structure prediction system implementing advanced dee
 ![CUDA Support](https://img.shields.io/badge/CUDA-11.3%2B-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-## 🌟 Core Components
+## Core Components
 
-### 🧬 Evoformer Module
+### Evoformer Module
 - Advanced MSA (Multiple Sequence Alignment) processing
 - Pair representation handling
 - Multi-head attention mechanisms
 - Iterative refinement pipeline
 
-### 🔮 Structure Module
+### Structure Module
 - 3D coordinate prediction
 - Backbone and side chain refinement
 - Atomic structure assembly
 - Iterative structure optimization
 
-### ⚡ Supporting Systems
+### Supporting Systems
 - High-performance data pipeline
 - Configuration management
 - Confidence scoring (pLDDT & TM-score)
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 OrcaFold/
@@ -88,7 +88,7 @@ OrcaFold/
 └── LICENSE
 ```
 
-## 📦 Module Details
+## Module Details
 
 ### 1. Evoformer (`orcafold/modules/evoformer/`)
 - **MSA Processor**: Handles multiple sequence alignment processing
@@ -120,7 +120,7 @@ OrcaFold/
 - TM-score estimation
 - Per-residue confidence metrics
 
-## 🛠️ Installation
+## Installation
 
 ```bash
 # Clone the repository
@@ -139,7 +139,7 @@ pip install -r requirements/gpu.txt  # for CUDA support
 pip install -e .
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ```python
 from orcafold import OrcaFold
@@ -159,28 +159,17 @@ structure, confidence = model.predict(features)
 structure.save('predicted_structure.pdb')
 ```
 
-## 📊 Performance Optimization
+## Performance Optimization
 
 - CUDA-accelerated computations
 - Mixed precision training
 - Efficient MSA processing
 - Optimized attention mechanisms
 
-## 🤝 Contributing
+## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
-
-## 📚 Citation
-
-```bibtex
-@software{orcafold2025,
-  author = {Your Name},
-  title = {OrcaFold: Advanced Protein Structure Prediction},
-  year = {2025},
-  url = {https://github.com/yourusername/OrcaFold}
-}
-```
