@@ -169,6 +169,7 @@ structure.save('predicted_structure.pdb')
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Bugs: visualizations
 
 ## License
 
